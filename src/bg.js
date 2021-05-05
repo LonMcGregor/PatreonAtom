@@ -18,7 +18,7 @@ function makeAnEntry(id, time, author, authoruri, link, title, summary){
       <name>${author}</name>
       <uri>${authoruri}</uri>
     </author>
-    <link rel="alternate" type="text/html" href="${link}"/>
+    <link rel="alternate" type="text/html" href="${link}"></link>
     <title>${title}</title>
     <summary type="html"><![CDATA[${summary}]]></summary>`;
     return el;
