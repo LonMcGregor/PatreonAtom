@@ -1,0 +1,12 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <id>tag:patreon.com,2021:feed/patreon.com/</id>
+    <title>Patreon Atom User Feed</title>
+    <icon>https://c5.patreon.com/external/favicon/favicon-32x32.png</icon>
+    <subtitle>Your Patreon subscriptions as an Atom feed</subtitle>
+    <logo>https://c5.patreon.com/external/favicon/apple-touch-icon.png</logo>
+    <updated>2021-05-05T09:18:18.891Z</updated>
+    <xhtml:script xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                src="bg.js"
+                type="application/javascript"/>
+</feed>

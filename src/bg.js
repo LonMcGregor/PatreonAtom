@@ -9,28 +9,19 @@ content%2Cembed%2Cimage%2Cpost_file%2Cpost_metadata%2Cpublished_at%2Cpatreon_url
 &json-api-use-default-includes=false\
 &json-api-version=1.0";
 
-let NEW_DOCUMENT_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
-    <id>tag:patreon.com,2021:feed/patreon.com/</id>
-    <title>Patreon Atom User Feed</title>
-    <icon>https://c5.patreon.com/external/favicon/favicon-32x32.png</icon>
-    <subtitle>Your Patreon subscriptions as an Atom feed</subtitle>
-    <logo>https://c5.patreon.com/external/favicon/apple-touch-icon.png</logo>
-    `;
-
 
 function makeAnEntry(id, time, author, authoruri, link, title, summary){
-    return `<entry>
-    <id>tag:patreon.com,2021:${id}</id>
-    <updated>${time}2021-05-04T15:00:14Z</updated>
+    const el = document.createElement("entry");
+    el.innerHTML = `<id>tag:patreon.com,2021:${id}</id>
+    <updated>${time}</updated>
     <author>
       <name>${author}</name>
       <uri>${authoruri}</uri>
     </author>
     <link rel="alternate" type="text/html" href="${link}"/>
     <title>${title}</title>
-    <summary type="html">${summary}</summary>
-  </entry>`;
+    <summary type="html"><![CDATA[${summary}]]></summary>`;
+    return el;
 }
 
 function getIncluded(data, id){
@@ -79,13 +70,14 @@ function processOnePost(data, included){
 }
 
 function writeToPage(data){
+    const feed = document.querySelector("feed");
     const now = new Date().toISOString();
-    NEW_DOCUMENT_CONTENT += "<updated>"+now+"</updated>";
+    const nowel = document.createElement("updated");
+    nowel.innerText = now;
+    feed.insertAdjacentElement("beforeend", nowel);
     data.data.forEach(post => {
-        NEW_DOCUMENT_CONTENT += processOnePost(post, data.included);
+        feed.insertAdjacentElement("beforeend", processOnePost(post, data.included));
     });
-    NEW_DOCUMENT_CONTENT += "</feed>"
-    document.write(NEW_DOCUMENT_CONTENT);
 }
 
 fetch(PATREON_URL)
