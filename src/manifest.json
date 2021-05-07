@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Patreon ATOM",
-  "version": "1.0.0",
+  "version": "1.0.1",
 
   "description": "Get patreon ATOM data",
 
@@ -11,5 +11,14 @@
       "128": "128.png"
   },
 
-  "permissions": ["https://*.patreon.com/*"]
+  "permissions": [
+    "https://*.patreon.com/*",
+    "downloads",
+    "storage"
+  ],
+
+  "background": {
+    "scripts": ["bg.js"],
+    "persistent": false
+  }
 }

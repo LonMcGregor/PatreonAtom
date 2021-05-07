@@ -9,6 +9,10 @@ content%2Cembed%2Cimage%2Cpost_file%2Cpost_metadata%2Cpublished_at%2Cpatreon_url
 &json-api-use-default-includes=false\
 &json-api-version=1.0";
 
+const XML_STRING = `<!--?xml version="1.0" encoding="UTF-8"?-->`;
+
+// fields for each type of content as well as the details required, as indicated by "include"
+// cursor would be the update date of the last item on a "page"
 
 function makeAnEntry(id, time, author, authoruri, link, title, summary){
     const el = document.createElement("entry");
@@ -80,6 +84,59 @@ function writeToPage(data){
     });
 }
 
-fetch(PATREON_URL)
-.then(response => response.json())
-.then(writeToPage);
+function downloadPage(xml){
+    const textfile = new File([xml], "PatreonAtom.xml", {type: "text/xml"});
+    chrome.downloads.download({
+        url: window.URL.createObjectURL(textfile),
+        filename: "PatreonAtom.xml"
+    });
+    // download was started. does not mean it completed.
+    const today = new Date().getDay();
+    chrome.storage.local.set({"lastrun": today});
+}
+
+function createInMemoryPage(data){
+    const head = XML_STRING +`
+    <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+        <id>tag:patreon.com,2021:feed/patreon.com/</id>
+        <title>Patreon Atom User Feed</title>
+        <icon>https://c5.patreon.com/external/favicon/favicon-32x32.png</icon>
+        <subtitle>Your Patreon subscriptions as an Atom feed</subtitle>
+        <logo>https://c5.patreon.com/external/favicon/apple-touch-icon.png</logo>`;
+    let body = `<updated>`+new Date().toISOString()+`</updated>`;
+    data.data.forEach(post => {
+        body += "\n" + processOnePost(post, data.included).outerHTML;
+    });
+    const tail = `</feed>`;
+    return head + body + tail;
+}
+
+function workInBackground(){
+    chrome.storage.local.get({"lastrun": 99999999}, details => {
+        const lastrun = details["lastrun"];
+        const today = new Date().getDay();
+        console.log("Running. Last: " + lastrun + " today: " + today);
+        // don't run if it already ran today
+        if(today !== lastrun) {
+            fetch(PATREON_URL)
+            .then(response => response.json())
+            .then(createInMemoryPage)
+            .then(downloadPage);
+        } else {
+            // an alarm? I'm assuming i don't keep my browser opne all the time...
+        }
+    });
+}
+
+if(window.location.pathname==="/atom.xml"){
+    // running in a tab
+    fetch(PATREON_URL)
+    .then(response => response.json())
+    .then(writeToPage)
+    .then(() => {
+        downloadPage(XML_STRING + document.querySelector("feed").outerHTML);
+    });
+}
+// else running in background page
+chrome.runtime.onStartup.addListener(workInBackground);
+chrome.runtime.onInstalled.addListener(workInBackground);
