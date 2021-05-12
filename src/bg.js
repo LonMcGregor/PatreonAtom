@@ -77,10 +77,10 @@ function processOnePost(data, included){
 }
 
 function downloadPage(xml){
-    const textfile = new File([xml], "PatreonAtom.xml", {type: "text/xml"});
+    const textfile = new File([xml], "PatreonAtom.atom", {type: "text/atom"});
     chrome.downloads.download({
         url: window.URL.createObjectURL(textfile),
-        filename: "PatreonAtom.xml"
+        filename: "PatreonAtom.atom"
     });
     // download was started. does not mean it completed.
     const today = new Date().getDay();
