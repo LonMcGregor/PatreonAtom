@@ -15,8 +15,7 @@ const XML_STRING = `<!--?xml version="1.0" encoding="UTF-8"?-->`;
 // cursor would be the update date of the last item on a "page"
 
 function makeAnEntry(id, time, author, authoruri, link, title, summary){
-    const el = document.createElement("entry");
-    el.innerHTML = `<id>tag:patreon.com,2021:${id}</id>
+    return `<entry><id>tag:patreon.com,2021:${id}</id>
     <updated>${time}</updated>
     <author>
       <name>${author}</name>
@@ -24,8 +23,12 @@ function makeAnEntry(id, time, author, authoruri, link, title, summary){
     </author>
     <link rel="alternate" type="text/html" href="${link}"></link>
     <title>${title}</title>
-    <summary type="html"><![CDATA[${summary}]]></summary>`;
-    return el;
+    <summary type="html"><![CDATA[${summary}]]></summary>
+    </entry>`;
+}
+
+function removeXMLChars(input){
+    return input.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&apos;");
 }
 
 function getIncluded(data, id){
@@ -65,23 +68,12 @@ function processOnePost(data, included){
     return makeAnEntry(
         "post" + data.id, // an incrementing number in the form 00000000
         data.attributes.published_at, // e.g. 2021-05-04T14:27:09.000+00:00
-        escape(author.attributes.full_name), // Text
+        removeXMLChars(author.attributes.full_name), // Text
         author.attributes.url, // https://www.patreon.com/whatever
         data.attributes.url, // "https://www.patreon.com/posts/whatever-00000000"
-        escape(data.attributes.title), //  text
+        removeXMLChars(data.attributes.title), //  text
         generateSummary(data, included) // HTML
     );
-}
-
-function writeToPage(data){
-    const feed = document.querySelector("feed");
-    const now = new Date().toISOString();
-    const nowel = document.createElement("updated");
-    nowel.innerText = now;
-    feed.insertAdjacentElement("beforeend", nowel);
-    data.data.forEach(post => {
-        feed.insertAdjacentElement("beforeend", processOnePost(post, data.included));
-    });
 }
 
 function downloadPage(xml){
@@ -105,7 +97,7 @@ function createInMemoryPage(data){
         <logo>https://c5.patreon.com/external/favicon/apple-touch-icon.png</logo>`;
     let body = `<updated>`+new Date().toISOString()+`</updated>`;
     data.data.forEach(post => {
-        body += "\n" + processOnePost(post, data.included).outerHTML;
+        body += "\n" + processOnePost(post, data.included);
     });
     const tail = `</feed>`;
     return head + body + tail;
@@ -130,13 +122,9 @@ function workInBackground(){
 
 if(window.location.pathname==="/atom.xml"){
     // running in a tab
-    fetch(PATREON_URL)
-    .then(response => response.json())
-    .then(writeToPage)
-    .then(() => {
-        downloadPage(XML_STRING + document.querySelector("feed").outerHTML);
-    });
+    workInBackground();
+} else {
+    // else running in background page
+    chrome.runtime.onStartup.addListener(workInBackground);
+    chrome.runtime.onInstalled.addListener(workInBackground);
 }
-// else running in background page
-chrome.runtime.onStartup.addListener(workInBackground);
-chrome.runtime.onInstalled.addListener(workInBackground);
