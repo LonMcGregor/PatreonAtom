@@ -80,7 +80,9 @@ function downloadPage(xml){
     const textfile = new File([xml], "PatreonAtom.atom", {type: "text/atom"});
     chrome.downloads.download({
         url: window.URL.createObjectURL(textfile),
-        filename: "PatreonAtom.atom"
+        filename: "PatreonAtom.atom",
+        conflictAction: "overwrite",
+        saveAs: false
     });
     // download was started. does not mean it completed.
     const today = new Date().getDay();
